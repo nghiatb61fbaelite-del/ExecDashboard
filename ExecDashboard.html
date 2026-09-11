@@ -238,7 +238,181 @@
 
   <script id="vnfiteApiConfig" type="application/json">{"apiUrl":"https://script.google.com/macros/s/AKfycbwH51pB8E3-0UUUfS8Mlz-MDN_M_z4yhLP_7c4_mI_bRM1deR7zWxbGQ1zU-reFUcov/exec"}</script>
   <script id="vnfiteInitialData" type="application/json">{"snapshotDate":"—","tasks":[],"projectTasks":[],"hr":null,"front":{"units":[],"kpis":[],"tasks":[],"note":""},"warnings":[],"projects":[],"projectStages":[],"projectActions":[],"projectDecisions":[],"trainingModules":[],"sources":[],"history":[],"groupLastUpdated":{}}</script>
-  <script>
+  
+    <style id="deckStyles">
+      /* ---- Bộ slide in ra PDF (xem deck_layer.py) ---- */
+      #printDeck{display:none}
+      .deck-pick{display:grid;gap:12px;margin-top:4px}
+      .deck-opt{display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:start;
+        text-align:left;padding:15px 17px;border:1px solid #dfe4ec;border-radius:14px;
+        background:#fff;cursor:pointer;font:inherit;color:inherit;transition:.15s}
+      .deck-opt:hover,.deck-opt:focus-visible{border-color:#d92335;background:#fff7f8;
+        box-shadow:0 6px 18px rgba(217,35,53,.10);outline:none}
+      .deck-opt-ico{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;
+        background:#0f2a4a;color:#fff;font-weight:800;font-size:13px;letter-spacing:.4px}
+      .deck-opt-ico.b{background:#8a6a10}.deck-opt-ico.c{background:#d92335}
+      .deck-opt strong{display:block;font-size:15px;margin-bottom:3px}
+      .deck-opt span{display:block;font-size:12.5px;line-height:1.5;color:#617085}
+      .deck-note{margin-top:14px;font-size:12px;line-height:1.6;color:#617085;
+        background:#f4f6fa;border-radius:11px;padding:11px 13px}
+
+      /* Khung một trang slide. Dùng chung cho cả xem trước lẫn in. */
+      .pslide{position:relative;width:508mm;height:285.75mm;overflow:hidden;
+        background:#fff;color:#16202e;box-sizing:border-box;
+        font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+        display:flex;flex-direction:column}
+      .pslide *{box-sizing:border-box}
+      .ps-head{flex:0 0 auto;padding:13mm 15mm 0}
+      .ps-kicker{display:inline-block;font-size:4.1mm;font-weight:800;letter-spacing:.9px;
+        text-transform:uppercase;color:#d92335;border-left:1.4mm solid #d92335;padding-left:3.2mm}
+      .ps-title{font-size:9.6mm;line-height:1.12;font-weight:800;margin:3.6mm 0 0;color:#0f2a4a}
+      .ps-sub{font-size:4.6mm;line-height:1.4;color:#5b6a7e;margin:2.6mm 0 0;max-width:330mm}
+      .ps-body{flex:1 1 auto;padding:8mm 15mm 0;min-height:0;overflow:hidden;
+        display:flex;flex-direction:column;gap:6mm}
+      .ps-foot{flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;
+        padding:5mm 15mm 7mm;font-size:3.6mm;color:#8391a4;border-top:.3mm solid #e6eaf1;
+        margin:5mm 15mm 0;padding:4mm 0 7mm}
+      .ps-foot strong{color:#0f2a4a;font-weight:700}
+
+      /* Trang bìa / trang phân mục */
+      .pslide.cover{background:#0f2a4a;color:#fff;justify-content:center;padding:0 22mm}
+      .pslide.cover .ps-kicker{color:#ff8a95;border-color:#d92335}
+      .pslide.cover .ps-title{color:#fff;font-size:17mm;margin-top:6mm}
+      .pslide.cover .ps-sub{color:#c3d2e5;font-size:5.6mm;margin-top:6mm}
+      .cover-meta{margin-top:14mm;display:flex;gap:14mm;flex-wrap:wrap}
+      .cover-meta div{font-size:4.2mm;color:#9fb4cd}
+      .cover-meta b{display:block;font-size:6.4mm;color:#fff;margin-bottom:1.4mm}
+
+      /* Dãy ô số */
+      .ps-tiles{display:grid;gap:5mm;grid-template-columns:repeat(4,1fr)}
+      .ps-tiles.n2{grid-template-columns:repeat(2,1fr)}
+      .ps-tiles.n3{grid-template-columns:repeat(3,1fr)}
+      .ps-tiles.n5{grid-template-columns:repeat(5,1fr)}
+      .ps-tile{border:.35mm solid #e2e7ef;border-left:1.5mm solid #0f2a4a;border-radius:2.4mm;
+        padding:5mm 5.5mm;background:#fbfcfe;min-height:30mm}
+      .ps-tile.warn{border-left-color:#d92335;background:#fff6f7}
+      .ps-tile.good{border-left-color:#147a62;background:#f3fbf8}
+      .ps-tile b{display:block;font-size:11mm;line-height:1.05;font-weight:800;color:#0f2a4a}
+      .ps-tile.warn b{color:#d92335}.ps-tile.good b{color:#147a62}
+      .ps-tile i{display:block;font-style:normal;font-size:4.2mm;font-weight:700;
+        color:#33445c;margin-top:2.4mm}
+      .ps-tile em{display:block;font-style:normal;font-size:3.7mm;line-height:1.35;
+        color:#75839a;margin-top:1.8mm}
+
+      /* Hai/ba cột danh sách */
+      .ps-cols{display:grid;gap:6mm;margin-top:0;flex:1 1 auto;align-items:stretch}
+      .ps-cols.c2{grid-template-columns:1fr 1fr}
+      .ps-cols.c3{grid-template-columns:1fr 1fr 1fr}
+      .ps-card{border:.35mm solid #e2e7ef;border-radius:2.4mm;padding:5mm 5.5mm;background:#fff}
+      .ps-card h4{margin:0 0 3.4mm;font-size:4.3mm;font-weight:800;letter-spacing:.5px;
+        text-transform:uppercase;color:#0f2a4a}
+      .ps-card.red h4{color:#d92335}.ps-card.green h4{color:#147a62}
+      .ps-card ul{margin:0;padding-left:5mm}
+      .ps-card li{font-size:4mm;line-height:1.45;margin-bottom:2.6mm;color:#33445c}
+      .ps-card li b{color:#0f2a4a}
+      .ps-empty{font-size:4mm;color:#8391a4;font-style:italic}
+
+      /* Bảng */
+      .ps-table{width:100%;border-collapse:collapse;font-size:3.7mm;flex:0 0 auto}
+      .ps-table th{background:#0f2a4a;color:#fff;text-align:left;padding:3mm 3.4mm;
+        font-size:3.5mm;font-weight:700;letter-spacing:.3px}
+      .ps-table td{padding:2.8mm 3.4mm;border-bottom:.3mm solid #e9edf3;
+        vertical-align:top;line-height:1.38;color:#33445c}
+      .ps-table tr:nth-child(even) td{background:#fafbfd}
+      .ps-table .nw{white-space:nowrap}
+      .ps-pill{display:inline-block;padding:.9mm 2.6mm;border-radius:6mm;font-size:3.2mm;
+        font-weight:700;background:#eef1f6;color:#33445c}
+      .ps-pill.red{background:#fde8ea;color:#b21d2c}
+      .ps-pill.amber{background:#fdf3dd;color:#8a6a10}
+      .ps-pill.green{background:#e3f6ef;color:#147a62}
+      .ps-grade{display:inline-block;min-width:13mm;text-align:center;padding:1.2mm 2mm;
+        border-radius:2mm;font-weight:800;font-size:4.4mm;background:#eef1f6;color:#0f2a4a}
+      .ps-grade.a{background:#e3f6ef;color:#0f6b56}.ps-grade.b{background:#eaf2fd;color:#1c4f9c}
+      .ps-grade.c{background:#fdf3dd;color:#8a6a10}.ps-grade.d{background:#fde8ea;color:#b21d2c}
+
+      /* Thanh tiến độ trong bảng */
+      .ps-bar{display:block;height:2.4mm;border-radius:2mm;background:#e6eaf1;overflow:hidden;
+        min-width:24mm;margin-top:1.4mm}
+      .ps-bar i{display:block;height:100%;background:#0f2a4a}
+
+      @media screen{
+        body.deck-preview{background:#4a5568}
+        body.deck-preview #printDeck{display:block;padding:24px 0}
+        body.deck-preview .pslide{margin:0 auto 24px;box-shadow:0 10px 40px rgba(0,0,0,.35);
+          transform-origin:top center}
+        body.deck-preview .shell,body.deck-preview footer{display:none!important}
+        .deck-bar{position:fixed;top:0;left:0;right:0;z-index:120;display:none;
+          align-items:center;gap:12px;padding:10px 18px;background:#0f2a4a;color:#fff;
+          font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.3)}
+        body.deck-preview .deck-bar{display:flex}
+        .deck-bar strong{font-size:14px}
+        .deck-bar .sp{flex:1}
+        .deck-bar button{font:inherit;font-weight:700;padding:7px 15px;border-radius:8px;
+          border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;cursor:pointer}
+        .deck-bar button.go{background:#d92335;border-color:#d92335}
+        body.deck-preview{padding-top:46px}
+      }
+
+      @media print{
+        @page{size:508mm 285.75mm;margin:0}
+        body.deck-preview .shell,body.deck-preview .drawer,body.deck-preview .drawer-overlay,
+        body.deck-preview .modal-overlay,body.deck-preview footer,body.deck-preview .deck-bar,
+        body.deck-preview .onboarding-guide{display:none!important}
+        body.deck-preview{background:#fff!important;padding:0!important}
+        body.deck-preview #printDeck{display:block;padding:0}
+        .pslide{margin:0!important;box-shadow:none!important;break-after:page;
+          page-break-after:always;transform:none!important}
+        .pslide:last-child{break-after:auto;page-break-after:auto}
+        #printDeck,.pslide,.pslide *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      }
+    </style>
+
+  <div class="deck-bar" id="deckBar">
+    <strong>Bản xem trước báo cáo</strong>
+    <span id="deckBarInfo"></span>
+    <span class="sp"></span>
+    <button type="button" id="deckBack">← Quay lại dashboard</button>
+    <button type="button" class="go" id="deckPrint">🖨 In / Lưu PDF</button>
+  </div>
+  <div id="printDeck"></div>
+
+  <div class="modal-overlay" id="deckModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="deckTitle">
+      <div class="modal-head">
+        <div><span class="eyebrow">In báo cáo</span>
+          <h3 id="deckTitle">Chọn bản báo cáo cần in</h3></div>
+        <button class="drawer-close" id="deckClose" aria-label="Đóng">×</button>
+      </div>
+      <div class="live-modal-body">
+        <div class="deck-pick">
+          <button type="button" class="deck-opt" data-deck="front">
+            <span class="deck-opt-ico">FR</span>
+            <span><strong>Khối Front — báo cáo kinh doanh</strong>
+              <span>Mỗi trung tâm một trang: 4 ô số chính của kỳ, điểm nghẽn, next step
+                và điểm sáng. Kèm bảng đầu việc cần xử lý và kế hoạch tuần tới.</span></span>
+          </button>
+          <button type="button" class="deck-opt" data-deck="back">
+            <span class="deck-opt-ico b">BO</span>
+            <span><strong>Khối Back — kết quả công việc &amp; kế hoạch</strong>
+              <span>Mỗi phòng/ban một trang: khối lượng đầu việc, tiến độ bình quân,
+                vướng mắc và kế hoạch. Kèm bảng đầu việc quá hạn toàn khối.</span></span>
+          </button>
+          <button type="button" class="deck-opt" data-deck="plan">
+            <span class="deck-opt-ico c">KH</span>
+            <span><strong>Ban Kế hoạch — toàn bộ Dashboard</strong>
+              <span>Bản điều hành ~20 trang: số tổng toàn công ty, xếp hạng A→D các trung tâm,
+                tóm tắt cả hai khối, 02 dự án, đào tạo, nhân sự, cảnh báo dữ liệu và
+                danh sách đầu việc quá hạn / đến hạn 7 ngày.</span></span>
+          </button>
+        </div>
+        <div class="deck-note"><strong>Cách lưu thành file:</strong> chọn một bản ở trên →
+          xem trước → bấm <em>In / Lưu PDF</em> → trong hộp thoại in chọn máy in
+          <em>“Save as PDF”</em>, khổ giấy để <em>mặc định</em> và bật
+          <em>“Background graphics”</em> (Chrome) để giữ màu nền.</div>
+      </div>
+    </section>
+  </div>
+<script>
     const STORAGE_KEY='vnfite-dashboard-20260826-front-live-v15';
     const BASE_DATA=JSON.parse(document.getElementById('vnfiteInitialData').textContent);
     let DATA=loadSavedData();
@@ -718,7 +892,7 @@
     }
 
     function initApiSource(){
-      $('#printReport')?.addEventListener('click',()=>window.print());
+      
       $('#liveSourceBtn')?.addEventListener('click',openLiveModal);
       $('#refreshLive')?.addEventListener('click',()=>refreshLiveSources(true));
       $('#liveClose')?.addEventListener('click',closeLiveModal);
@@ -744,13 +918,470 @@
       }
     }
 
-    initFilters();renderAll();initGuideTour();initCoverCarousel();initApiSource();
+    initFilters();renderAll();initGuideTour();initCoverCarousel();initApiSource();initDeck();
     /* Mở thẳng tab Tổng quan: người mở dashboard cần biết toàn cảnh trước,
        rồi mới đi vào từng khối. Deep-link #front, #hr… vẫn hoạt động. */
     const initial=location.hash.replace('#','');
     const TABS=['overview','backoffice','front','projects','training','hr'];
     switchTab(TABS.includes(initial)?initial:'overview',false);
     syncControls();
+    const DUE_OVERDUE="Đã qua hạn";
+    const DUE_TODAY="Hôm nay";
+    const DUE_WEEK="Trong 7 ngày";
+    const DUE_DONE="Đã đóng";
+    const DUE_LATER="Sắp tới";
+    const DUE_NODATE="Chưa có hạn";
+
+    /* ====================================================================
+       IN BÁO CÁO -> BỘ SLIDE 16:9  (chi tiết: deck_layer.py)
+       --------------------------------------------------------------------
+       3 bản: front | back | plan. Mọi số liệu lấy từ DATA nên bản in luôn
+       khớp với màn hình. Không có số nào được viết cứng ở đây.
+       ==================================================================== */
+    const DECK_TITLES={front:'Khối Front · Báo cáo kinh doanh',
+                       back:'Khối Back Office · Kết quả & kế hoạch',
+                       plan:'Ban Kế hoạch · Tổng hợp toàn công ty'};
+    let deckScope=null;
+
+    function dEsc(v){return esc(v==null?'':v)}
+    function dNum(v){const n=Number(v);return isFinite(n)?n.toLocaleString('vi-VN'):'—'}
+    function dPct(v){const n=Number(v);return isFinite(n)?Math.round(n)+'%':'—'}
+    function dDate(v){return v?date(v):'—'}
+    function dToday(){return DATA.snapshotDate?date(DATA.snapshotDate):''}
+
+    /* Một trang slide. footL/footR mặc định là tên báo cáo + ngày chốt số. */
+    function dSlide(o){
+      const n=o.tiles?(o.tiles.length>=5?5:o.tiles.length):0;
+      const tiles=n?'<div class="ps-tiles n'+n+'">'+o.tiles.map(t=>
+        '<div class="ps-tile '+(t.tone||'')+'"><b>'+dEsc(t.value)+'</b><i>'+dEsc(t.label)+'</i>'
+        +(t.sub?'<em>'+dEsc(t.sub)+'</em>':'')+'</div>').join('')+'</div>':'';
+      return '<section class="pslide'+(o.cover?' cover':'')+'">'
+        +'<div class="ps-head">'
+        +(o.kicker?'<span class="ps-kicker">'+dEsc(o.kicker)+'</span>':'')
+        +'<h2 class="ps-title">'+dEsc(o.title)+'</h2>'
+        +(o.sub?'<p class="ps-sub">'+dEsc(o.sub)+'</p>':'')
+        +(o.coverMeta||'')+'</div>'
+        +(o.cover?'':'<div class="ps-body">'+tiles+(o.body||'')+'</div>'
+          +'<div class="ps-foot"><span>'+dEsc(o.footL||DECK_TITLES[deckScope])+'</span>'
+          +'<span><strong>VNFITE</strong> · số liệu chốt '+dEsc(dToday())+'</span></div>')
+        +'</section>';
+    }
+
+    /* Thẻ danh sách gạch đầu dòng. Rỗng thì nói rõ là nguồn chưa ghi, KHÔNG
+       bịa nội dung cho đầy trang. */
+    function dCard(title, items, tone, empty){
+      const li=(items||[]).filter(Boolean).slice(0,6);
+      return '<div class="ps-card '+(tone||'')+'"><h4>'+dEsc(title)+'</h4>'
+        /* items[] là các MẢNH HTML đã escape sẵn bằng dEsc ở nơi gọi (để còn
+           in đậm được tên đầu việc). Escape lại ở đây sẽ hiện ra chữ "<b>". */
+        +(li.length?'<ul>'+li.map(x=>'<li>'+x+'</li>').join('')+'</ul>'
+                   :'<p class="ps-empty">'+dEsc(empty||'Nguồn chưa ghi nội dung cho mục này.')+'</p>')
+        +'</div>';
+    }
+
+    function dBucketPill(b){
+      const cls=b===DUE_OVERDUE?'red':(b===DUE_TODAY?'amber':(b===DUE_DONE?'green':''));
+      return '<span class="ps-pill '+cls+'">'+dEsc(b||'—')+'</span>';
+    }
+
+    /* Bảng đầu việc, tự cắt trang. rows/trang giữ ở 9 để chữ không bị bé. */
+    function dTaskSlides(tasks, opt){
+      const per=opt.per||9, out=[];
+      if(!tasks.length) return [dSlide({kicker:opt.kicker,title:opt.title,
+        sub:opt.emptySub||'Không có đầu việc nào thuộc nhóm này tại thời điểm chốt số.'})];
+      for(let i=0;i<tasks.length;i+=per){
+        const part=tasks.slice(i,i+per), pages=Math.ceil(tasks.length/per), p=i/per+1;
+        out.push(dSlide({kicker:opt.kicker,
+          title:opt.title+(pages>1?' ('+p+'/'+pages+')':''),
+          sub:opt.sub,
+          body:'<table class="ps-table"><thead><tr>'
+            +'<th style="width:20%">'+dEsc(opt.firstCol||'Phòng/Ban')+'</th>'
+            +'<th style="width:24%">Đầu việc</th><th style="width:11%">Trạng thái</th>'
+            +'<th style="width:10%">Deadline</th><th style="width:18%">Vì sao vướng</th>'
+            +'<th style="width:17%">Next step</th></tr></thead><tbody>'
+            +part.map(t=>'<tr><td><b>'+dEsc(opt.first?opt.first(t):(t.department||'—'))+'</b>'
+              +(t.group?'<div style="color:#8391a4">'+dEsc(t.group)+'</div>':'')+'</td>'
+              +'<td>'+dEsc(t.task)+'<span class="ps-bar"><i style="width:'
+                +Math.max(0,Math.min(100,Number(t.progress_pct)||0))+'%"></i></span></td>'
+              +'<td>'+dEsc(t.status)+'<div>'+dBucketPill(t.due_bucket)+'</div></td>'
+              +'<td class="nw">'+dEsc(t.end_date?date(t.end_date):(t.deadline_raw||'Chưa chốt'))
+                +(Number(t.days_late)>0?'<div style="color:#b21d2c">trễ '+t.days_late+' ngày</div>':'')+'</td>'
+              +'<td>'+dEsc(t.why||'Chưa nêu trong nguồn')+'</td>'
+              +'<td>'+dEsc(t.next_step||'Cần chốt bước tiếp theo')+'</td></tr>').join('')
+            +'</tbody></table>'}));
+      }
+      return out;
+    }
+
+    function dOverdue(list){return (list||[]).filter(t=>t.due_bucket===DUE_OVERDUE)
+      .sort((a,b)=>(Number(b.days_late)||0)-(Number(a.days_late)||0))}
+    function dSoon(list){return (list||[]).filter(t=>t.due_bucket===DUE_TODAY||t.due_bucket===DUE_WEEK)}
+
+    /* ---- Ô số của một trung tâm Front: lấy kỳ gần nhất CÓ số thật ---- */
+    function dUnitKpis(unitId){
+      const all=(DATA.front&&DATA.front.kpis||[]).filter(k=>k.unit_id===unitId);
+      const order=['week','month','total'];
+      for(const p of order){
+        const rows=all.filter(k=>k.period_type===p&&k.metric_level!=='sub'
+          &&(Number(k.plan)||Number(k.actual)));
+        if(rows.length) return rows;
+      }
+      return all.filter(k=>k.metric_level!=='sub');
+    }
+
+    function dUnitTiles(unitId){
+      const rows=dUnitKpis(unitId).slice(0,4);
+      return rows.map(k=>({
+        value:dNum(k.actual),
+        label:k.metric,
+        sub:(k.period_label?shortTxt(k.period_label,34)+' · ':'')
+            +dPct(k.completion_pct)+' KH kỳ'+(Number(k.plan)?' ('+dNum(k.plan)+')':''),
+        tone:Number(k.completion_pct)>=100?'good':(Number(k.completion_pct)<50?'warn':'')
+      }));
+    }
+
+    function shortTxt(s,n){s=String(s||'');return s.length>n?s.slice(0,n-1)+'…':s}
+
+    /* ---- Ô số chung cho một nhóm đầu việc ---- */
+    function dTaskTiles(tasks, extra){
+      const done=tasks.filter(t=>t.due_bucket===DUE_DONE||t.status==='Done').length;
+      const over=dOverdue(tasks).length, soon=dSoon(tasks).length;
+      const avg=tasks.length?Math.round(tasks.reduce((s,t)=>s+(Number(t.progress_pct)||0),0)/tasks.length):0;
+      const tiles=[
+        {value:done+'/'+tasks.length,label:'Đầu việc hoàn thành',
+         sub:dPct(tasks.length?done/tasks.length*100:0)+' khối lượng',tone:'good'},
+        {value:avg+'%',label:'Tiến độ bình quân',sub:'Theo trạng thái từng đầu việc'},
+        {value:String(over),label:'Đầu việc quá hạn',
+         sub:over?'Cần chốt lại ngày hoàn thành':'Không có đầu việc trễ hạn',
+         tone:over?'warn':'good'},
+        {value:String(soon),label:'Đến hạn trong 7 ngày',sub:'Tính từ ngày chốt số'}
+      ];
+      return extra?tiles.slice(0,3).concat([extra]):tiles;
+    }
+
+    /* ================= BẢN 1: KHỐI FRONT ================= */
+    function deckFront(){
+      const F=DATA.front||{}, units=F.units||[], tasks=F.tasks||[], out=[];
+      out.push(dSlide({cover:true,kicker:'Báo cáo kết quả',
+        title:'KINH DOANH — KHỐI FRONT',
+        sub:units.length+' đơn vị: '+units.map(u=>u.label).join(' · '),
+        coverMeta:'<div class="cover-meta"><div><b>'+dEsc(dToday())+'</b>Ngày chốt số liệu</div>'
+          +'<div><b>'+tasks.length+'</b>Đầu việc theo dõi</div>'
+          +'<div><b>'+(F.kpis||[]).length+'</b>Dòng KPI từ Masterplan</div></div>'}));
+
+      const sc=(DATA.scorecards||[]).filter(s=>s.block==='Front Office');
+      out.push(dSlide({kicker:'Dashboard tổng quan',
+        title:'Khối Front đạt gì tại kỳ báo cáo',
+        sub:'Tổng hợp từ Masterplan Front — '+units.length+' đơn vị.',
+        tiles:dTaskTiles(tasks),
+        body:'<div class="ps-cols c2">'
+          +dCard('Xếp hạng các trung tâm',sc.map(s=>'<b>'+dEsc(s.unit)+'</b> — '
+              +'<span class="ps-grade '+String(s.grade)[0].toLowerCase()+'">'+dEsc(s.grade)+'</span> '
+              +Math.round(s.score)+'/100 · tiến độ '+Math.round(s.progress_score)
+              +' · KPI '+(s.weights&&s.weights.kpi?Math.round(s.kpi_score):'—')
+              +' · kỷ luật '+Math.round(s.discipline_score)))
+          +dCard('Điểm nghẽn nổi bật',(F.kpis||[]).filter(k=>k.bottleneck)
+              .map(k=>'<b>'+dEsc(k.unit)+':</b> '+dEsc(k.bottleneck)),'red',
+              'Các đơn vị chưa ghi điểm nghẽn vào cột "Điểm nghẽn" của Masterplan.')
+          +'</div>'}));
+
+      units.forEach(u=>{
+        const ut=tasks.filter(t=>t.unit_id===u.id);
+        const ks=dUnitKpis(u.id);
+        const s=(DATA.scorecards||[]).find(x=>x.unit===u.label);
+        out.push(dSlide({kicker:u.label,
+          title:s?('Xếp hạng '+s.grade+' · '+Math.round(s.score)+'/100'):'Kết quả kỳ báo cáo',
+          sub:ut.length+' đầu việc theo dõi · '+ks.length+' chỉ tiêu KPI trong kỳ gần nhất.',
+          tiles:dUnitTiles(u.id).length?dUnitTiles(u.id):dTaskTiles(ut),
+          body:'<div class="ps-cols c3">'
+            +dCard('Vì sao vướng',ks.filter(k=>k.bottleneck).map(k=>dEsc(k.metric)+': '+dEsc(k.bottleneck))
+                .concat(dOverdue(ut).slice(0,4).map(t=>'<b>'+dEsc(t.task)+'</b> — '+dEsc(t.why))),'red',
+                'Không có điểm nghẽn nào được ghi và không có đầu việc quá hạn.')
+            +dCard('Next step',ks.filter(k=>k.proposal).map(k=>dEsc(k.proposal))
+                .concat(dSoon(ut).slice(0,4).map(t=>'<b>'+dEsc(t.task)+'</b> — '+dEsc(t.next_step))),'',
+                'Chưa có đề xuất trong Masterplan và không có việc đến hạn trong 7 ngày.')
+            +dCard('Điểm sáng',ks.filter(k=>Number(k.completion_pct)>=100)
+                .map(k=>dEsc(k.metric)+' đạt '+dPct(k.completion_pct)+' kế hoạch kỳ')
+                .concat(ks.filter(k=>k.result).map(k=>dEsc(k.result))),'green',
+                'Chưa chỉ tiêu nào đạt 100% kế hoạch kỳ.')
+            +'</div>'}));
+      });
+
+      dTaskSlides(dOverdue(tasks).concat(dSoon(tasks)),{
+        kicker:'Dashboard đầu việc',title:'Đầu việc cần xử lý — quá hạn & đến hạn 7 ngày',
+        sub:'Sắp theo số ngày trễ giảm dần. Cột "Vì sao vướng" và "Next step" lấy nguyên văn từ Masterplan nếu đơn vị đã ghi.',
+        firstCol:'Đơn vị',first:t=>t.unit||'—',
+        emptySub:'Toàn khối không có đầu việc quá hạn hay đến hạn trong 7 ngày.'
+      }).forEach(x=>out.push(x));
+
+      out.push(dSlide({cover:true,kicker:'Khối Front kính trình',
+        title:'Ban Tổng Giám đốc xem xét, cho ý kiến chỉ đạo',
+        sub:'Cảm ơn Quý Ban đã theo dõi báo cáo.'}));
+      return out;
+    }
+
+    /* ================= BẢN 2: KHỐI BACK OFFICE ================= */
+    function deckBack(){
+      const tasks=DATA.tasks||[], out=[];
+      const depts=[];
+      tasks.forEach(t=>{if(depts.indexOf(t.department)===-1)depts.push(t.department)});
+
+      out.push(dSlide({cover:true,kicker:'Kết quả công việc & kế hoạch',
+        title:'BACK OFFICE',
+        sub:depts.length+' phòng/ban: '+depts.join(' · '),
+        coverMeta:'<div class="cover-meta"><div><b>'+dEsc(dToday())+'</b>Ngày chốt số liệu</div>'
+          +'<div><b>'+tasks.length+'</b>Đầu việc theo dõi</div>'
+          +'<div><b>'+dOverdue(tasks).length+'</b>Đầu việc quá hạn</div></div>'}));
+
+      const sc=(DATA.scorecards||[]).filter(s=>s.block==='Back Office');
+      out.push(dSlide({kicker:'Tổng hợp chung',title:'Toàn khối Back Office',
+        sub:'Tổng hợp theo lũy kế, không chỉ nhìn từng tuần rời rạc.',
+        tiles:dTaskTiles(tasks),
+        body:'<div class="ps-cols c2">'
+          +dCard('Xếp hạng các phòng/ban',sc.map(s=>'<b>'+dEsc(s.unit)+'</b> — '
+              +'<span class="ps-grade '+String(s.grade)[0].toLowerCase()+'">'+dEsc(s.grade)+'</span> '
+              +Math.round(s.score)+'/100 · '+s.task_done+'/'+s.task_total+' việc xong'
+              +(s.task_overdue?' · '+s.task_overdue+' quá hạn':'')))
+          +dCard('Cảnh báo dữ liệu',(DATA.warnings||[]).map(w=>'<b>'+dEsc(w.area)+':</b> '+dEsc(w.issue)),
+              'red','Không có cảnh báo nào tại thời điểm chốt số.')
+          +'</div>'}));
+
+      depts.forEach(d=>{
+        const dt=tasks.filter(t=>t.department===d);
+        const s=sc.find(x=>x.unit===d);
+        out.push(dSlide({kicker:d,
+          title:s?('Xếp hạng '+s.grade+' · '+Math.round(s.score)+'/100'):'Kết quả kỳ báo cáo',
+          sub:dt.length+' đầu việc trong Masterplan Back Office.',
+          tiles:dTaskTiles(dt),
+          body:'<div class="ps-cols c2">'
+            +dCard('Vì sao vướng',dOverdue(dt).concat(dt.filter(t=>t.due_bucket===DUE_TODAY))
+                .slice(0,6).map(t=>'<b>'+dEsc(t.task)+'</b> — '+dEsc(t.why)),'red',
+                'Không có đầu việc quá hạn hay đến hạn hôm nay.')
+            +dCard('Kế hoạch hành động',dt.filter(t=>t.due_bucket!==DUE_DONE).slice(0,6)
+                .map(t=>'<b>'+dEsc(t.task)+'</b> — '+dEsc(t.next_step)),'',
+                'Toàn bộ đầu việc của phòng/ban đã đóng.')
+            +'</div>'}));
+      });
+
+      dTaskSlides(dOverdue(tasks).concat(dSoon(tasks)),{
+        kicker:'Toàn khối',title:'Đầu việc quá hạn & đến hạn 7 ngày',
+        sub:'Cột "Vì sao vướng" và "Next step" lấy nguyên văn từ Masterplan nếu phòng/ban đã ghi.',
+        emptySub:'Toàn khối không có đầu việc quá hạn hay đến hạn trong 7 ngày.'
+      }).forEach(x=>out.push(x));
+
+      out.push(dSlide({cover:true,kicker:'Khối Back Office kính trình',
+        title:'Ban Tổng Giám đốc xem xét, cho ý kiến chỉ đạo',
+        sub:'Cảm ơn Quý Ban đã theo dõi báo cáo.'}));
+      return out;
+    }
+
+    /* ================= BẢN 3: BAN KẾ HOẠCH (bản điều hành ~20 trang) =====
+       Cố ý KHÔNG in toàn bộ bảng đầu việc: chỉ in phần phải ra quyết định
+       (quá hạn, đến hạn 7 ngày). Phần còn lại xem trực tiếp trên dashboard.
+       ==================================================================== */
+    function deckPlan(){
+      const out=[], T=DATA.companyTotals||{},
+            all=(DATA.tasks||[]).concat(DATA.projectTasks||[],(DATA.front&&DATA.front.tasks)||[]);
+
+      out.push(dSlide({cover:true,kicker:'Ban Kế hoạch',
+        title:'TỔNG HỢP TOÀN CÔNG TY',
+        sub:'Bản điều hành — tổng hợp toàn bộ nội dung đang theo dõi trên Dashboard.',
+        coverMeta:'<div class="cover-meta"><div><b>'+dEsc(dToday())+'</b>Ngày chốt số liệu</div>'
+          +'<div><b>'+(T.total||all.length)+'</b>Đầu việc toàn công ty</div>'
+          +'<div><b>'+(DATA.scorecards||[]).length+'</b>Trung tâm được chấm điểm</div></div>'}));
+
+      out.push(dSlide({kicker:'Dãy số toàn công ty',title:'Toàn cảnh công việc',
+        sub:'Gộp Masterplan Back, Masterplan Front và 02 dự án.',
+        tiles:[{value:dNum(T.total),label:'Tổng đầu việc',
+                sub:'Back '+dNum(T.backoffice)+' · Front '+dNum(T.front)+' · Dự án '+dNum(T.projects)},
+               {value:dPct(T.pctDone),label:'Tỷ lệ hoàn thành',sub:dNum(T.done)+' việc đã đóng',tone:'good'},
+               {value:dNum(T.overdue),label:'Quá hạn',sub:'Cần chốt lại ngày hoàn thành',
+                tone:Number(T.overdue)?'warn':'good'},
+               {value:dNum(T.dueWeek),label:'Đến hạn 7 ngày',sub:'Hôm nay: '+dNum(T.dueToday)},
+               {value:dNum(T.noOwner),label:'Chưa có PIC',sub:'Không giao được việc nếu bỏ trống',
+                tone:Number(T.noOwner)?'warn':'good'}],
+        body:'<div class="ps-cols c2">'
+          +dCard('Cảnh báo dữ liệu',(DATA.warnings||[]).map(w=>'<b>'+dEsc(w.area)+':</b> '+dEsc(w.issue)),
+              'red','Không có cảnh báo nào tại thời điểm chốt số.')
+          +dCard('Nguồn & độ mới',Object.keys(DATA.groupLastUpdated||{})
+              .map(k=>'<b>'+dEsc(k)+':</b> cập nhật '+dDate((DATA.groupLastUpdated||{})[k])),'',
+              'Chưa ghi nhận lần cập nhật nào theo tab.')
+          +'</div>'}));
+
+      const sc=(DATA.scorecards||[]).slice().sort((a,b)=>b.score-a.score);
+      out.push(dSlide({kicker:'Xếp hạng',title:'Bảng xếp hạng các trung tâm (A → D)',
+        sub:'Điểm 0–100 từ 3 trục: tiến độ 50% · KPI kỳ 30% (chỉ Front) · kỷ luật cập nhật 20%. '
+           +'Trung tâm không có KPI thì trọng số chia lại, KHÔNG bị chấm 0.',
+        body:'<table class="ps-table"><thead><tr><th style="width:6%">#</th>'
+          +'<th style="width:26%">Trung tâm</th><th style="width:12%">Khối</th>'
+          +'<th style="width:10%">Hạng</th><th style="width:9%">Điểm</th>'
+          +'<th style="width:9%">Tiến độ</th><th style="width:9%">KPI</th>'
+          +'<th style="width:9%">Kỷ luật</th><th style="width:10%">Trọng số</th></tr></thead><tbody>'
+          +sc.map((s,i)=>'<tr><td>'+(i+1)+'</td><td><b>'+dEsc(s.unit)+'</b></td>'
+            +'<td>'+dEsc(s.block)+'</td>'
+            +'<td><span class="ps-grade '+String(s.grade)[0].toLowerCase()+'">'+dEsc(s.grade)+'</span></td>'
+            +'<td><b>'+Math.round(s.score)+'</b></td><td>'+Math.round(s.progress_score)+'</td>'
+            +'<td>'+(s.weights&&s.weights.kpi?Math.round(s.kpi_score):'—')+'</td>'
+            +'<td>'+Math.round(s.discipline_score)+'</td>'
+            +'<td>'+(s.weights?Math.round(s.weights.progress)+'/'+Math.round(s.weights.kpi)
+                +'/'+Math.round(s.weights.discipline):'—')+'</td></tr>').join('')
+          +'</tbody></table>'}));
+
+      /* Tóm tắt mỗi khối đúng 1 trang */
+      const fr=(DATA.front&&DATA.front.tasks)||[];
+      out.push(dSlide({kicker:'Khối Front',title:'Tóm tắt khối Front Office',
+        sub:((DATA.front&&DATA.front.units)||[]).map(u=>u.label).join(' · '),
+        tiles:dTaskTiles(fr),
+        body:'<div class="ps-cols c2">'
+          +dCard('Vì sao vướng',dOverdue(fr).slice(0,6).map(t=>'<b>'+dEsc(t.unit||t.department)+':</b> '
+              +dEsc(t.task)+' — '+dEsc(t.why)),'red','Không có đầu việc quá hạn.')
+          +dCard('Next step',dSoon(fr).slice(0,6).map(t=>'<b>'+dEsc(t.unit||t.department)+':</b> '
+              +dEsc(t.next_step)),'','Không có đầu việc đến hạn trong 7 ngày.')
+          +'</div>'}));
+
+      const bo=DATA.tasks||[];
+      out.push(dSlide({kicker:'Khối Back',title:'Tóm tắt khối Back Office',
+        sub:'Masterplan Back Office — theo phòng/ban.',
+        tiles:dTaskTiles(bo),
+        body:'<div class="ps-cols c2">'
+          +dCard('Vì sao vướng',dOverdue(bo).slice(0,6).map(t=>'<b>'+dEsc(t.department)+':</b> '
+              +dEsc(t.task)+' — '+dEsc(t.why)),'red','Không có đầu việc quá hạn.')
+          +dCard('Next step',dSoon(bo).slice(0,6).map(t=>'<b>'+dEsc(t.department)+':</b> '
+              +dEsc(t.next_step)),'','Không có đầu việc đến hạn trong 7 ngày.')
+          +'</div>'}));
+
+      /* 02 dự án: mỗi dự án 1 trang */
+      (DATA.projects||[]).forEach(p=>{
+        const pt=(DATA.projectTasks||[]).filter(t=>t.project_id===p.id);
+        out.push(dSlide({kicker:'Dự án',title:dEsc(p.project),
+          sub:'Chủ trì: '+dEsc(p.owner||'—')+' · Giai đoạn: '+dEsc(p.stage||'—')
+             +' · Trạng thái: '+dEsc(p.status||'—'),
+          tiles:[{value:dPct(p.readiness_pct),label:'Mức sẵn sàng',sub:dEsc(p.next_milestone||'')},
+                 {value:dNum(p.completed_count)+'/'+dNum(p.task_count),label:'Đầu việc hoàn thành'},
+                 {value:dNum(p.overdue_count),label:'Đầu việc quá hạn',
+                  tone:Number(p.overdue_count)?'warn':'good'},
+                 {value:String(dSoon(pt).length),label:'Đến hạn 7 ngày'}],
+          body:'<div class="ps-cols c2">'
+            +dCard('Vì sao vướng',[p.why].concat(dOverdue(pt).slice(0,4)
+                .map(t=>'<b>'+dEsc(t.workstream||'')+':</b> '+dEsc(t.task)+' — '+dEsc(t.why))),'red')
+            +dCard('Next step / quyết định cần chốt',[p.next_step,p.decision]
+                .concat((DATA.projectActions||[]).filter(a=>a.project_id===p.id)
+                  .map(a=>dEsc(a.when)+': '+dEsc(a.action)+' ('+dEsc(a.lead)+')')))
+            +'</div>'}));
+      });
+
+      /* Đào tạo */
+      const tm=DATA.trainingModules||[];
+      if(tm.length){
+        out.push(dSlide({kicker:'Đào tạo',title:'Chương trình đào tạo nội bộ',
+          sub:tm.length+' học phần đang theo dõi.',
+          body:'<table class="ps-table"><thead><tr><th style="width:24%">Học phần</th>'
+            +'<th style="width:11%">Trạng thái</th><th style="width:10%">Sẵn sàng</th>'
+            +'<th style="width:13%">Phụ trách</th><th style="width:21%">Vì sao vướng</th>'
+            +'<th style="width:21%">Next step</th></tr></thead><tbody>'
+            +tm.slice(0,9).map(m=>'<tr><td><b>'+dEsc(m.module)+'</b>'
+              +(m.audience?'<div style="color:#8391a4">'+dEsc(m.audience)+'</div>':'')+'</td>'
+              +'<td>'+dEsc(m.status)+'</td><td>'+dPct(m.proposal_readiness_pct)+'</td>'
+              +'<td>'+dEsc(m.owner||'—')+'</td><td>'+dEsc(m.why||'—')+'</td>'
+              +'<td>'+dEsc(m.next_step||'—')+'</td></tr>').join('')
+            +'</tbody></table>'}));
+      }
+
+      /* Nhân sự */
+      const hr=DATA.hr;
+      if(hr){
+        out.push(dSlide({kicker:'Nhân sự',title:'Định biên & tuyển dụng',
+          sub:'Nguồn: file định biên '+dEsc(hr.source_month||'')+'.',
+          tiles:[{value:dNum(hr.current_plan),label:'Định biên hiện tại'},
+                 {value:dNum(hr.target_year_end),label:'Mục tiêu cuối năm'},
+                 {value:dNum(hr.gap),label:'Còn thiếu',tone:Number(hr.gap)?'warn':'good'},
+                 {value:dPct(hr.coverage_pct),label:'Tỷ lệ lấp đầy'}],
+          body:'<div class="ps-cols c2">'
+            +dCard('Đơn vị còn thiếu nhiều nhất',(hr.units||[]).slice()
+                .sort((a,b)=>(Number(b.gap)||0)-(Number(a.gap)||0)).filter(u=>Number(u.gap)>0)
+                .slice(0,6).map(u=>'<b>'+dEsc(u.unit)+':</b> thiếu '+dNum(u.gap)
+                  +' (hiện '+dNum(u.current)+'/'+dNum(u.target)+')'),'red',
+                'Không đơn vị nào còn thiếu so với mục tiêu.')
+            +dCard('Vị trí đang tuyển',(hr.vacancies||[]).slice(0,6)
+                .map(v=>typeof v==='string'?v:('<b>'+dEsc(v.title||v.unit||'')+'</b> '
+                  +dEsc(v.note||v.status||''))),'',
+                'Danh sách vị trí trống chưa được ghi trong file định biên.')
+            +'</div>'}));
+      }
+
+      dTaskSlides(dOverdue(all),{
+        kicker:'Cần quyết định',title:'Toàn công ty — đầu việc QUÁ HẠN',
+        sub:'Sắp theo số ngày trễ giảm dần. Đây là phần cần Ban Điều hành cho ý kiến.',
+        firstCol:'Đơn vị',first:t=>t.unit||t.workstream||t.department||'—',
+        emptySub:'Toàn công ty không còn đầu việc quá hạn.'
+      }).forEach(x=>out.push(x));
+
+      dTaskSlides(dSoon(all),{
+        kicker:'Tuần tới',title:'Toàn công ty — đến hạn trong 7 ngày',
+        sub:'Danh sách để chốt kế hoạch tuần. Đầu việc còn lại xem trực tiếp trên Dashboard.',
+        firstCol:'Đơn vị',first:t=>t.unit||t.workstream||t.department||'—',
+        emptySub:'Không có đầu việc nào đến hạn trong 7 ngày tới.'
+      }).forEach(x=>out.push(x));
+
+      out.push(dSlide({cover:true,kicker:'Ban Kế hoạch kính trình',
+        title:'Ban Tổng Giám đốc xem xét, cho ý kiến chỉ đạo',
+        sub:'Toàn bộ số liệu trong báo cáo này lấy trực tiếp từ Dashboard, chốt lúc '
+           +dEsc(DATA.generatedAt?date(DATA.generatedAt):dToday())+'.'}));
+      return out;
+    }
+
+    /* ---------------- điều khiển ---------------- */
+    function buildDeck(scope){
+      deckScope=scope;
+      const slides=scope==='front'?deckFront():(scope==='back'?deckBack():deckPlan());
+      $('#printDeck').innerHTML=slides.join('');
+      $('#deckBarInfo').textContent=DECK_TITLES[scope]+' · '+slides.length+' trang';
+      document.body.classList.add('deck-preview');
+      fitDeck();window.scrollTo(0,0);
+    }
+
+    /* Slide rộng 508mm — trên màn hình phải thu nhỏ lại mới nhìn được cả
+       trang. Chỉ thu khi XEM, lúc in luôn trả về tỉ lệ 1:1 (xem @media print). */
+    function fitDeck(){
+      const deck=$('#printDeck');if(!deck)return;
+      const slide=deck.querySelector('.pslide');if(!slide)return;
+      const w=slide.offsetWidth||1;
+      const scale=Math.min(1,(window.innerWidth-48)/w);
+      deck.querySelectorAll('.pslide').forEach(s=>{
+        s.style.transform=scale<1?'scale('+scale+')':'';
+        s.style.marginBottom=scale<1?(24-(1-scale)*s.offsetHeight)+'px':'24px';
+      });
+    }
+
+    function closeDeckPreview(){
+      document.body.classList.remove('deck-preview');
+      $('#printDeck').innerHTML='';deckScope=null;
+    }
+    /* Modal của bản v17 hiện lên bằng CLASS .open (xem .modal-overlay.open
+       trong CSS gốc), không phải bằng aria-hidden. Đặt cả hai: class để
+       hiện, aria-hidden để trình đọc màn hình hiểu đúng. */
+    function openDeckModal(){const m=$('#deckModal');if(!m)return;
+      m.classList.add('open');m.setAttribute('aria-hidden','false')}
+    function closeDeckModal(){const m=$('#deckModal');if(!m)return;
+      m.classList.remove('open');m.setAttribute('aria-hidden','true')}
+
+    function initDeck(){
+      $('#printReport')?.addEventListener('click',openDeckModal);
+      $('#deckClose')?.addEventListener('click',closeDeckModal);
+      $('#deckModal')?.addEventListener('click',e=>{if(e.target.id==='deckModal')closeDeckModal()});
+      $$('#deckModal [data-deck]').forEach(b=>b.addEventListener('click',()=>{
+        closeDeckModal();buildDeck(b.dataset.deck);
+      }));
+      $('#deckBack')?.addEventListener('click',closeDeckPreview);
+      $('#deckPrint')?.addEventListener('click',()=>window.print());
+      window.addEventListener('resize',()=>{if(deckScope)fitDeck()});
+      document.addEventListener('keydown',e=>{
+        if(e.key!=='Escape')return;
+        if(document.body.classList.contains('deck-preview'))closeDeckPreview();
+        else closeDeckModal();
+      });
+    }
+
   </script>
 </body>
 </html>
