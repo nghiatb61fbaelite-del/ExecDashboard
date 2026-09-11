@@ -240,6 +240,15 @@
   <script id="vnfiteInitialData" type="application/json">{"snapshotDate":"—","tasks":[],"projectTasks":[],"hr":null,"front":{"units":[],"kpis":[],"tasks":[],"note":""},"warnings":[],"projects":[],"projectStages":[],"projectActions":[],"projectDecisions":[],"trainingModules":[],"sources":[],"history":[],"groupLastUpdated":{}}</script>
   
     <style id="deckStyles">
+      /* ---- Tắt hướng dẫn thì ẩn luôn dải ảnh trợ lý ----
+         Dải ảnh này cũng là một phần của lớp hướng dẫn (nó minh hoạ cách
+         dùng dashboard), nên bấm "Hướng dẫn" tắt mà nó vẫn chạy thì vô lý.
+         Ẩn xong phải trả trang bìa về MỘT cột, nếu không cột ảnh biến mất
+         để lại một khoảng trắng rộng bằng 1/3 trang bìa. Đặt ở đây (cuối
+         file) để thắng luật .cover của bản gốc mà không phải sửa vào nó. */
+      body.guides-hidden .cover-carousel{display:none!important}
+      body.guides-hidden .cover{grid-template-columns:minmax(0,1fr)!important}
+
       /* ---- Bộ slide in ra PDF (xem deck_layer.py) ---- */
       #printDeck{display:none}
       .deck-pick{display:grid;gap:12px;margin-top:4px}
